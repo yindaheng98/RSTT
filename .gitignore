@@ -1,3 +1,6 @@
+venv
+vimeo90k
+
 .ipynb_checkpoints
 __pycache__
 *.lmdb

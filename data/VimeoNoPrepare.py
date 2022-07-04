@@ -11,6 +11,10 @@ import lmdb
 import cv2
 import torch
 from torch.utils.data import Dataset
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from datasets.generate_LR import downsample
+from datasets.create_lmdb import get_keys
 
 logger = logging.getLogger('base')
 
@@ -40,26 +44,12 @@ class VimeoDataset(Dataset):
 
         self.LR_index_list = [i * 2 for i in range(self.LR_num_frames)]
 
-        self.HR_root, self.LR_root = config['dataroot_HR'], config['dataroot_LR']
-        self.data_type = self.config['data_type']
+        self.HR_root = config['dataroot_HR']
 
         # Load image keys
-        if config['cache_keys']:
-            logger.info('Using cache keys: {}'.format(config['cache_keys']))
-            cache_keys = config['cache_keys']
-        else:
-            cache_keys = 'Vimeo_keys.pkl'
-        logger.info('Using cache keys - {}.'.format(cache_keys))
-        self.HR_paths = list(pickle.load(open('{}'.format(cache_keys), 'rb'))['keys'])
+        self.HR_paths = list(get_keys(config['keys']))
      
         assert self.HR_paths, 'Error: HR path is empty.'
-
-        if self.data_type == 'lmdb':
-            self.HR_env, self.LR_env = None, None
-        elif self.data_type == 'img':
-            pass
-        else:
-            raise ValueError('Wrong data type: {}'.format(self.data_type))
 
     def _init_lmdb(self):
         # https://github.com/chainer/chainermn/issues/129
@@ -68,25 +58,7 @@ class VimeoDataset(Dataset):
         self.LR_env = lmdb.open(self.config['dataroot_LR'], readonly=True, lock=False, readahead=False,
                                 meminit=False)
 
-    def _read_img_lmdb(self, env, key, size):
-        """Read image from lmdb.
-
-        Args:
-            env: lmdb environment.
-            key (str): Key to read image form lmdb.
-            size (tuple): (C, H, W)
-
-        Returns:
-            array: BGR image.
-        """
-        with env.begin(write=False) as txn:
-            buf = txn.get(key.encode('ascii'))
-        img_flat = np.frombuffer(buf, dtype=np.uint8)
-        C, H, W = size
-        img = img_flat.reshape(H, W, C)
-        return img
-
-    def read_img(self, env, path, size=None):
+    def read_img(self, path, size=None):
         """Read image using cv2 or from lmdb.
 
         Args:
@@ -97,10 +69,7 @@ class VimeoDataset(Dataset):
         Returns:
             array: (H, W, C) BGR image. 
         """
-        if env is None:  # img
-            img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
-        else:
-            img = self._read_img_lmdb(env, path, size)
+        img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
         img = img.astype(np.float32) / 255.
         if img.ndim == 2:
             img = np.expand_dims(img, axis=2)
@@ -126,9 +95,6 @@ class VimeoDataset(Dataset):
         return [_augment(img) for img in img_list]
 
     def __getitem__(self, index):
-        if self.data_type == 'lmdb':
-            if (self.HR_env is None) or (self.LR_env is None):
-                self._init_lmdb()
 
         key = self.HR_paths[index]
         name_a, name_b = key.split('_')
@@ -142,19 +108,13 @@ class VimeoDataset(Dataset):
         # Get HR images
         img_HR_list = []
         for v in HR_frames_list:
-            if self.data_type == 'lmdb':
-                img_HR = self.read_img(self.HR_env, key + '_{}'.format(v), self.HR_image_shape)
-            else:               
-                img_HR = self.read_img(None, os.path.join(self.HR_root, name_a, name_b, 'im{}.png'.format(v)))
+            img_HR = self.read_img(os.path.join(self.HR_root, name_a, name_b, 'im{}.png'.format(v)))
             img_HR_list.append(img_HR)
                 
         # Get LR images
         img_LR_list = []
-        for v in LR_frames_list:
-            if self.data_type == 'lmdb':
-                img_LR = self.read_img(self.LR_env, key + '_{}'.format(v), self.LR_image_shape)
-            else:
-                img_LR = self.read_img(None, os.path.join(self.LR_root, name_a, name_b, 'im{}.png'.format(v)))
+        for img_HR in img_HR_list:
+            img_LR = downsample(img_HR, self.scale)
             img_LR_list.append(img_LR)
 
         _, H, W = self.LR_image_shape

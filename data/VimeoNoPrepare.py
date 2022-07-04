@@ -106,15 +106,17 @@ class VimeoDataset(Dataset):
         LR_frames_list = [HR_frames_list[i] for i in self.LR_index_list]
 
         # Get HR images
+        img_HR_dict = {}
         img_HR_list = []
         for v in HR_frames_list:
             img_HR = self.read_img(os.path.join(self.HR_root, name_a, name_b, 'im{}.png'.format(v)))
             img_HR_list.append(img_HR)
+            img_HR_dict[v] = img_HR
                 
         # Get LR images
         img_LR_list = []
-        for img_HR in img_HR_list:
-            img_LR = downsample(img_HR, self.scale)
+        for v in LR_frames_list:
+            img_LR = downsample(img_HR_dict[v], self.scale)
             img_LR_list.append(img_LR)
 
         _, H, W = self.LR_image_shape

@@ -43,7 +43,7 @@ def downsample(image, up_scale):
     return image_LR
 
 if __name__ == "__main__":
-    data_path = "/home/seu/RSTT/vimeo90k/vimeo_septuplet/sequences/00001/0001"
-    save_path = "/home/seu/RSTT/"
+    data_path = "./vimeo90k/vimeo_septuplet/sequences/00001/0001"
+    save_path = "./"
     up_scale = 4
     generate_LR(data_path, save_path, up_scale)

@@ -29,9 +29,21 @@ def generate_LR(data_path, save_path, up_scale):
         image = cv2.imread(os.path.join(data_path, filename))
 
         # Resize image
-        width = int(np.floor(image.shape[1] / up_scale))
-        height = int(np.floor(image.shape[0] / up_scale))
-        image_HR = image[0:up_scale * height, 0:up_scale * width, :]
-        image_LR = imresize_np(image_HR, 1 / up_scale, True)
+        image_LR = downsample(image, up_scale)
 
         cv2.imwrite(os.path.join(save_path, filename), image_LR)
+
+def downsample(image, up_scale):
+    # Resize image
+    width = int(np.floor(image.shape[1] / up_scale))
+    height = int(np.floor(image.shape[0] / up_scale))
+    image_HR = image[0:up_scale * height, 0:up_scale * width, :]
+    image_LR = imresize_np(image_HR, 1 / up_scale, True)
+
+    return image_LR
+
+if __name__ == "__main__":
+    data_path = "/home/seu/RSTT/vimeo90k/vimeo_septuplet/sequences/00001/0001"
+    save_path = "/home/seu/RSTT/"
+    up_scale = 4
+    generate_LR(data_path, save_path, up_scale)

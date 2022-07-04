@@ -2,7 +2,7 @@
 import logging
 import torch
 import torch.utils.data
-from .Vimeo import VimeoDataset
+from .VimeoNoPrepare import VimeoDataset
 
 
 def create_dataloader(dataset, dataset_config, config, sampler):

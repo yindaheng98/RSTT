@@ -9,14 +9,15 @@ gpu_ids: [0]
 dataset:
   name: Vimeo90k_septuplet
   random_reverse: true #false
-  dataroot_HR: ./datasets/vimeo_septuplet/vimeo_HR.lmdb
+  dataroot_HR: ./vimeo90k/vimeo_septuplet/sequences
   dataroot_LR: ./datasets/vimeo_septuplet/vimeo_LR.lmdb
+  keys: ./vimeo90k/vimeo_septuplet/sep_trainlist.txt
   cache_keys: ./datasets/vimeo_septuplet/Vimeo_keys.pkl 
 
   num_frames: 7
   use_shuffle: true
   n_workers: 4  # per GPU
-  batch_size: 7
+  batch_size: 1
   crop_size: 256
   image_shape: [3, 256, 448]
   use_flip: true

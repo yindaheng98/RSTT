@@ -81,21 +81,26 @@ def create_lmdb(data_path, text_path, save_path):
     pickle.dump(meta_info, open(os.path.join(save_path, 'Vimeo_keys.pkl'), "wb"))
     print('Finish creating lmdb meta information.')
 
-def test_lmdb(dataroot, dataset='vimeo7'):
-    env = lmdb.open(dataroot, readonly=True, lock=False, readahead=False, meminit=False)
-    meta_info = pickle.load(open(os.path.join(dataroot, 'Vimeo7_train_keys.pkl'), "rb"))
-    print('Name: ', meta_info['name'])
-    print('Resolution: ', meta_info['resolution'])
-    print('# keys: ', len(meta_info['keys']))
-    # read one image
-    if dataset == 'vimeo7':
-        key = '00001_0001_4'
-    else:
-        raise NameError('Please check the filename format.')
-    print('Reading {} for test.'.format(key))
-    with env.begin(write=False) as txn:
-        buf = txn.get(key.encode('ascii'))
-    img_flat = np.frombuffer(buf, dtype=np.uint8)
-    C, H, W = [int(s) for s in meta_info['resolution'].split('_')]
-    img = img_flat.reshape(H, W, C)
-    cv2.imwrite('test.png', img)
+def get_keys(text_path):
+    # Read all image paths to a list
+    with open(text_path) as f:
+        lines = f.readlines()
+        lines = [line.strip() for line in lines]
+
+    keys = []
+    for line in lines:
+        dir = line.split('/')[0]
+        subdir = line.split('/')[1]
+        for j in range(7):
+            keys.append('{}_{}_{}'.format(dir, subdir, j + 1))
+
+    keys = sorted(keys)
+    key_set = set()
+    for key in keys:
+        a, b, _ = key.split('_')
+        key_set.add('{}_{}'.format(a, b))
+    return key_set
+
+if __name__ == "__main__":
+    text_path = "./vimeo90k/vimeo_septuplet/sep_trainlist.txt"
+    print(get_keys(text_path))

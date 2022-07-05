@@ -7,5 +7,6 @@
 cd /seu_share/home/dongfang/df_yindh/RSTT
 module load anaconda3
 module load cuda-11.6
+eval "$(conda shell.bash hook)"
 conda activate venv
 python train.py --config ./configs/RSTT-S.yml

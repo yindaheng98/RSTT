@@ -79,7 +79,6 @@ class VimeoDataset(Dataset):
             self.zdataset = zipfile.ZipFile(self.HR_root, "r")
             img_bytes = self.zdataset.read(os.path.join("vimeo_septuplet", "sequences", path))
         img = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_UNCHANGED)
-        print(img.shape)
         img = img.astype(np.float32) / 255.
         if img.ndim == 2:
             img = np.expand_dims(img, axis=2)

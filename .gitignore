@@ -9,3 +9,6 @@ __pycache__
 *.pkl
 *.txt
 *.state
+
+!requirements.txt
+!requirements.conda.txt

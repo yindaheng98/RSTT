@@ -47,7 +47,7 @@ class VimeoDataset(Dataset):
         self.HR_root = config['dataroot_HR']
 
         # Load image keys
-        self.HR_paths = list(get_keys(config['keys']))
+        self.HR_paths = list(get_keys(config['list']))
      
         assert self.HR_paths, 'Error: HR path is empty.'
 

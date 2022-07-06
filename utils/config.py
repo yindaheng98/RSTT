@@ -35,18 +35,9 @@ def parse_config(config_path, is_train=True):
     scale = config['scale']
 
     # Dataset
-    if is_train:
-        config['dataset']['scale'] = scale
-        is_lmdb = False
-        config['dataset']['dataroot_HR'] = os.path.expanduser(config['dataset']['dataroot_HR'])
-        if config['dataset']['dataroot_HR'].endswith('lmdb'):
-            is_lmdb = True
-        config['dataset']['dataroot_LR'] = os.path.expanduser(config['dataset']['dataroot_LR'])
-        if config['dataset']['dataroot_LR'].endswith('lmdb'):
-            is_lmdb = True
-        config['dataset']['data_type'] = 'lmdb' if is_lmdb else 'img'
-    else:
-        config['dataset']['dataset_root'] = os.path.expanduser(config['dataset']['dataset_root'])
+    config['dataset']['scale'] = scale
+    config['dataset']['dataroot_HR'] = os.path.expanduser(config['dataset']['dataroot_HR'])
+    config['dataset']['data_type'] = 'img'
 
     # Path
     for key, path in config['path'].items():

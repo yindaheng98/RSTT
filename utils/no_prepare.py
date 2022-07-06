@@ -9,9 +9,16 @@ import datasets.generate_LR as generate_LR
 
 def get_HR_paths(dataroot_HR, list_path):
     lines = create_lmdb.get_list(list_path)
-    path_set = set()
+    path_set = {}
     for line in lines:
-        path_set.add(os.path.join(dataroot_HR, line.split('/')[0]))
+        p, s = line.split('/')
+        p, s = os.path.join(dataroot_HR, p), os.path.join(dataroot_HR, p, s)
+        if p in path_set:
+            path_set[p].add(s)
+        else:
+            ss = set()
+            ss.add(s)
+            path_set[p] = ss
     return path_set
 
 def downsample(image, up_scale):

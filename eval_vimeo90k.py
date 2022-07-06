@@ -14,12 +14,15 @@ from models import create_model
 from utils import (mkdirs, parse_config, AverageMeter, structural_similarity, get_HR_paths, downsample,
                    read_seq_images, read_seqseq_images, index_generation, setup_logger, get_model_total_params)
 
-def main():
-    parser = argparse.ArgumentParser(description='Space-Time Video Super-Resolution Evaluation on Vimeo90k dataset')
-    parser.add_argument('--config', type=str, help='Path to config file (.yaml).')
+parser = argparse.ArgumentParser(description='Space-Time Video Super-Resolution Evaluation on Vimeo90k dataset')
+parser.add_argument('--config', type=str, help='Path to config file (.yaml).')
+
+def read_config():
     args = parser.parse_args()
     config = parse_config(args.config, is_train=False)
+    return config
 
+def main(config):
     save_path = config['path']['save_path'] 
     mkdirs(save_path)
     setup_logger('base', save_path, 'test', level=logging.INFO, screen=True, tofile=True)
@@ -44,11 +47,11 @@ def main():
     SSIM = []
     SSIM_Y = []
 
-    for GT_path in GT_paths:
+    for GT_path, sub_GT_paths in GT_paths.items():
         sub_save_path = os.path.join(save_path, GT_path.split('/')[-1])
         mkdirs(sub_save_path)
 
-        sub_GT_paths = sorted(glob.glob(os.path.join(GT_path, '*')))
+        sub_GT_paths = sorted(list(sub_GT_paths))
 
         seq_PSNR = AverageMeter()
         seq_PSNR_Y = AverageMeter()
@@ -141,7 +144,7 @@ def main():
               )
         logger.info(msg)
     logger.info('################ Final Results ################')
-    logger.info('Data: {} - {} - {}'.format(config['dataset']['name'], config['dataset']['mode'], config['dataset']['dataset_root']))
+    logger.info('Data: {} - {} - {}'.format(config['dataset']['name'], config['dataset']['mode'], config['dataset']['dataroot_HR']))
     logger.info('Model path: {}'.format(config['path']['pretrain_model']))
     msg = 'Total Average PSNR: {:.6f} dB PSNR-Y: {:.6f} dB SSIM: {:.6f} dB ' \
           'SSIM-Y: {:.6f} dB for {} clips.'.format(
@@ -151,4 +154,4 @@ def main():
     logger.info(msg)
 
 if __name__ == '__main__':
-    main()
+    main(read_config())

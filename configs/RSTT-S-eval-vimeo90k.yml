@@ -10,7 +10,7 @@ dataset:
   name: Vimeo90k_septuplet
   mode: fast
   dataroot_HR: ./vimeo90k/vimeo_septuplet/sequences
-  list: ./vimeo90k/vimeo_septuplet/sep_trainlist.txt
+  list: ./datasets/vimeo_septuplet/sep_fast_testlist.txt
   num_out_frames: 7
 
 # Network structures

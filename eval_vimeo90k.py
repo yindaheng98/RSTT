@@ -94,7 +94,7 @@ def main():
                     ssim = structural_similarity(output, target)
                     ssim_y = structural_similarity(output_y, target_y)
 
-                    cv2.imwrite(os.path.join(sub_save_path, '{:08d}.png'.format(frame_idx+1)), output[...,::-1])
+                    cv2.imwrite(os.path.join(sub_sub_save_path, '{:08d}.png'.format(frame_idx+1)), output[...,::-1])
 
                     clips_PSNR.update(psnr)
                     clips_PSNR_Y.update(psnr_y)

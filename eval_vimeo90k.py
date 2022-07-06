@@ -11,8 +11,8 @@ from skimage.metrics import peak_signal_noise_ratio
 from skimage.color import rgb2ycbcr
 
 from models import create_model
-from utils import (mkdirs, parse_config, AverageMeter, structural_similarity, 
-                   read_seq_images, index_generation, setup_logger, get_model_total_params)
+from utils import (mkdirs, parse_config, AverageMeter, structural_similarity, get_HR_paths, downsample,
+                   read_seq_images, read_seqseq_images, index_generation, setup_logger, get_model_total_params)
 
 def main():
     parser = argparse.ArgumentParser(description='Space-Time Video Super-Resolution Evaluation on Vimeo90k dataset')
@@ -28,7 +28,7 @@ def main():
 
     logger = logging.getLogger('base')
     logger.info('use GPU {}'.format(config['gpu_ids']))
-    logger.info('Data: {} - {} - {}'.format(config['dataset']['name'], config['dataset']['mode'], config['dataset']['dataset_root']))
+    logger.info('Data: {} - {} - {}'.format(config['dataset']['name'], config['dataset']['list'], config['dataset']['dataroot_HR']))
     logger.info('Model path: {}'.format(config['path']['pretrain_model']))
     logger.info('Model parameters: {} M'.format(model_params))
 
@@ -37,34 +37,32 @@ def main():
     model.eval()
     model = model.to(device)
 
-    LR_paths = sorted(glob.glob(os.path.join(config['dataset']['dataset_root'], config['dataset']['mode']+'_test', '*')))
+    GT_paths = get_HR_paths(config['dataset']['dataroot_HR'], config['dataset']['list'])
 
     PSNR = []
     PSNR_Y = []
     SSIM = []
     SSIM_Y = []
 
-    for LR_path in LR_paths:
-        sub_save_path = os.path.join(save_path, LR_path.split('/')[-1])
+    for GT_path in GT_paths:
+        sub_save_path = os.path.join(save_path, GT_path.split('/')[-1])
         mkdirs(sub_save_path)
 
-        sub_LR_paths = sorted(glob.glob(os.path.join(LR_path, '*')))
+        sub_GT_paths = sorted(glob.glob(os.path.join(GT_path, '*')))
 
         seq_PSNR = AverageMeter()
         seq_PSNR_Y = AverageMeter()
         seq_SSIM = AverageMeter()
         seq_SSIM_Y = AverageMeter()
-        for sub_LR_path in sub_LR_paths:
-            sub_sub_save_path = os.path.join(sub_save_path, sub_LR_path.split('/')[-1])
+        for sub_GT_path in sub_GT_paths:
+            sub_sub_save_path = os.path.join(sub_save_path, sub_GT_path.split('/')[-1])
             mkdirs(sub_sub_save_path)
 
             tested_index = []
 
-            sub_GT_path = sub_LR_path.replace('_LR', '')
-            imgs_LR = read_seq_images(sub_LR_path)
+            imgs_GT, imgs_LR = read_seqseq_images(sub_GT_path, config['scale'])
             imgs_LR = imgs_LR.astype(np.float32) / 255.
             imgs_LR = torch.from_numpy(imgs_LR).permute(0, 3, 1, 2).contiguous()
-            imgs_GT = read_seq_images(sub_GT_path)
         
             indices_list = index_generation(config['dataset']['num_out_frames'], imgs_LR.shape[0])
         
@@ -111,7 +109,7 @@ def main():
 
             msg = 'Folder {}/{} - Average PSNR: {:.6f} dB PSNR-Y: {:.6f} dB ' \
                 'Average SSIM: {:.6f} SSIM-Y: {:.6f} for {} frames; '.format(
-                    LR_path.split('/')[-1], sub_LR_path.split('/')[-1], 
+                    GT_path.split('/')[-1], sub_GT_path.split('/')[-1], 
                     clips_PSNR.average(), clips_PSNR_Y.average(), 
                     clips_SSIM.average(), clips_SSIM_Y.average(), 
                     clips_PSNR.count
@@ -124,7 +122,7 @@ def main():
 
         msg = 'Folder {} - Average PSNR: {:.6f} dB PSNR-Y: {:.6f} dB ' \
               'Average SSIM: {:.6f} SSIM-Y: {:.6f} for {} clips; '.format(
-                    LR_path.split('/')[-1], seq_PSNR.average(), 
+                    GT_path.split('/')[-1], seq_PSNR.average(), 
                     seq_PSNR_Y.average(), seq_SSIM.average(), 
                     seq_SSIM_Y.average(), seq_PSNR.count
                )
@@ -136,7 +134,7 @@ def main():
 
 
     logger.info('################ Tidy Outputs ################')
-    for path, psnr, psnr_y, ssim, ssim_y in zip(LR_paths, PSNR, PSNR_Y, SSIM, SSIM_Y):
+    for path, psnr, psnr_y, ssim, ssim_y in zip(GT_paths, PSNR, PSNR_Y, SSIM, SSIM_Y):
         msg = 'Folder {} - Average PSNR: {:.6f} dB PSNR-Y: {:.6f} dB ' \
               'SSIM: {:.6f} dB SSIM-Y: {:.6f} dB. '.format(
                   path.split('/')[-1], psnr, psnr_y, ssim, ssim_y

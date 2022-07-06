@@ -9,7 +9,8 @@ gpu_ids: [0]
 dataset:
   name: Vimeo90k_septuplet
   mode: fast
-  dataset_root: ./datasets/vimeo_septuplet/sequences_LR
+  dataroot_HR: ./vimeo90k/vimeo_septuplet/sequences
+  list: ./vimeo90k/vimeo_septuplet/sep_trainlist.txt
   num_out_frames: 7
 
 # Network structures

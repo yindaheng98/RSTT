@@ -81,12 +81,16 @@ def create_lmdb(data_path, text_path, save_path):
     pickle.dump(meta_info, open(os.path.join(save_path, 'Vimeo_keys.pkl'), "wb"))
     print('Finish creating lmdb meta information.')
 
-def get_keys(text_path):
+def get_list(text_path):
     # Read all image paths to a list
     with open(text_path) as f:
         lines = f.readlines()
         lines = [line.strip() for line in lines]
+    return lines
 
+def get_keys(text_path):
+    # Read all image paths to a list
+    lines = get_list(text_path)
     keys = []
     for line in lines:
         dir = line.split('/')[0]

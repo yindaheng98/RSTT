@@ -12,7 +12,7 @@ import cv2
 import torch
 from torch.utils.data import Dataset
 import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from datasets.generate_LR import downsample
 from datasets.create_lmdb import get_keys
 

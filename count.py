@@ -1,6 +1,6 @@
 import glob
 import re
-for path in glob.glob('experiments/RSTT-S_archived_220705-001733/models/*.log'):
+for path in glob.glob('experiments/RSTT-S_archived_220705-162106/models/*.log'):
     with open(path, "r") as f:
         print(path)
         s = f.read()
